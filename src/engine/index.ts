@@ -1,46 +1,52 @@
-import { isFunction } from './utils';
+import { invariant } from 'src/utils';
+import { useStore, useValue } from 'src/store/index';
+import { StoreKey } from 'src/constants';
+import { getReversePolishNotation, calculateReversePolishNotation } from 'src/reversePolishNotation';
 
-import type { EngineConfig, Engine } from './type';
+import type { Engine, GetResultConfig } from 'src/type';
 
 class EngineImpl implements Engine {
-    private config: EngineConfig = {};
+    private reset() {
+        const [, destoryValueList] = useStore(StoreKey.ValueList);
+        const [, destoryUseBoolean] = useStore(StoreKey.UseBoolean);
 
-    constructor(config?: EngineConfig) {
-        const { template = [], globalFunction = [] } = config || {};
-
-        this.config = {
-            template: [...template],
-            globalFunction: [...globalFunction]
-        }
+        destoryValueList();
+        destoryUseBoolean();
     }
 
-    registerFunction(input: Function) {
-        this.config.globalFunction.push(input);
-    }
+    getResult(expression: string, config?: GetResultConfig) {
+        invariant(!!expression, 'Invalid expression');
 
-    useFunction(input: Function) {
-        if (input instanceof Function) {
-            this.registerFunction(input);
-        }
+        try {
+            
+            if (config && typeof config === 'object') {
+                const { valueList, useBoolean = false } = config;
 
-        return this;
-    }
-
-    useFunctionList(inputList: Function[])  {
-        if (Array.isArray(inputList) && inputList.length > 0) {
-
-            inputList.forEach((input) => {
-
-                if (isFunction(input)) {
-                    this.registerFunction(input);
+                if (valueList && valueList.length > 0) {
+                    useStore(StoreKey.ValueList, valueList);
                 }
 
-            });
+                if (useBoolean) {
+                    useStore(StoreKey.UseBoolean, useBoolean);
+                }
+            }
 
+            return calculateReversePolishNotation(getReversePolishNotation(expression));
+
+        } catch (error) {
+            const useBoolean = useValue<boolean>(StoreKey.UseBoolean);
+
+            console.error(error);
+
+            this.reset();
+
+            if (useBoolean) {
+                return false;
+            }
+
+            return null;
         }
-
-        return this;
-    };
-
-    getResult: (expression: string, valueList?: { label: string; value: unknown; }[]) => unknown;
+    }
 }
+
+export { EngineImpl as FormulaEngine };

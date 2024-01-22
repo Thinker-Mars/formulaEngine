@@ -4,17 +4,19 @@
         "alwaysStrict": false,
         "baseUrl": ".",
         "allowSyntheticDefaultImports": true,
-        "module": "ES2015",
+        "module": "ESNext",
         "noImplicitAny": false,
-        "moduleResolution": "Node",
         "paths": {
             "src": ["./src"]
         },
-        "target": "ESNext",
+        "target": "ES5",
         "outDir": "dist",
-        "declaration": true,
-        "removeComments": true,
-        "lib": ["DOM", "ES2016"],
+        "declaration": false,
+        "removeComments": false,
+        "lib": ["DOM","ESNext"],
+        "sourceMap": false
+    },
+    "ts-node": {
+          "require": ["tsconfig-paths/register"]
     }
-
 }
